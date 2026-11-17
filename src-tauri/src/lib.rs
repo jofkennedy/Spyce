@@ -6,6 +6,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tauri::Manager;
 use walkdir::WalkDir;
+mod lyrics;
+use lyrics::get_lyrics;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TrackMeta {
@@ -168,7 +170,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![scan_folder, download_youtube, update_track_metadata])
+        .invoke_handler(tauri::generate_handler![scan_folder, download_youtube, update_track_metadata, get_lyrics])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

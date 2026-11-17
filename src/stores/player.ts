@@ -3,11 +3,13 @@ import { ref, computed } from "vue";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { Store } from "@tauri-apps/plugin-store";
 import type { Track } from "./library";
+import { ensureGraph, resumeGraph } from "../audio/graph";
 
 export type RepeatMode = "off" | "all" | "one";
 
 export const usePlayerStore = defineStore("player", () => {
   const audio = new Audio();
+  audio.crossOrigin = "anonymous";
   const originalQueue = ref<Track[]>([]);
   const queue = ref<Track[]>([]);
   const userQueue = ref<string[]>([]);
@@ -124,9 +126,10 @@ export const usePlayerStore = defineStore("player", () => {
     if (i < 0 || i >= queue.value.length) return;
     index.value = i;
     const track = queue.value[i];
+    ensureGraph(audio);
     audio.src = convertFileSrc(track.path);
     audio.loop = repeat.value === "one";
-    audio.play().catch(() => {});
+    resumeGraph().then(() => audio.play()).catch(() => {});
   }
 
   function toggle() {
@@ -195,6 +198,8 @@ export const usePlayerStore = defineStore("player", () => {
     audio.loop = repeat.value === "one";
     saveSettings();
   }
+
+  function getTime() { return audio.currentTime; }
 
   function seek(sec: number) {
     audio.currentTime = sec;
@@ -267,7 +272,7 @@ export const usePlayerStore = defineStore("player", () => {
   return {
     queue, originalQueue, userQueue, index, contextName, isPlaying, isShuffle, repeat, volume, muted, currentTime, duration, isScrubbing,
     current, hasTrack, upNextContext,
-    setQueue, playAt, toggle, next, prev, toggleShuffle, cycleRepeat, seek, setVolume, toggleMute,
+    setQueue, playAt, toggle, next, prev, toggleShuffle, cycleRepeat, seek, getTime, setVolume, toggleMute,
     trackById, addToQueue, playNext, removeFromQueue, clearQueue, moveInQueue, playQueued, playContextTrack
   };
 });

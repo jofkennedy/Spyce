@@ -37,6 +37,40 @@ Semua perubahan signifikan pada project Spyce dicatat di dokumen ini.
 - Sidebar lama (Stacked cards) digantikan Sidebar modern.
 - Hero stats tiles (Tracks, Albums, Artists, Duration) — diganti subtitle di title area.
 
+## [Unreleased] - Perubahan Hari Ini
+
+### Added
+- Audio spectrum visualizer oranye di dalam now-playing bar dengan `AnalyserNode`, ResizeObserver, DPR-aware canvas, smoothing attack/release, dan reduced-motion support.
+- Lazy download `yt-dlp.exe` dan FFmpeg saat fitur YouTube pertama kali digunakan.
+- Editor judul lagu menggunakan metadata `lofty`.
+- Logo `spyce-logo.svg` di top bar dan source icon aplikasi baru.
+- UI responsive untuk track table, top bar, sidebar, player bar, queue panel, dan long-title ellipsis.
+
+### Changed
+- Tombol Queue hero dan bottom bar memakai satu state Pinia `ui.queueOpen`.
+- Tombol Queue playlist detail hanya membuka/menutup queue panel.
+- Tombol play pada hero dan nomor baris lagu dapat memutar/menjeda lagu.
+- Tombol Shuffle hero memulai playback track acak.
+- Tombol expand player dihapus.
+- Tombol edit track memakai dialog neomorphism yang di-Teleport ke `body` agar tidak terpotong.
+- Download YouTube sekarang mendukung playlist dan menyimpan MP3 ke folder musik terpilih.
+- Tombol bottom player menggunakan gaya neomorphism dan kontrol queue yang konsisten.
+
+### Fixed
+- Popover edit track tidak lagi terpotong oleh track table atau playlist pendek.
+- Scrollbar main panel berada di dalam panel dengan spacing dan kontras yang benar.
+- Top bar tidak lagi memperlihatkan konten yang menembus saat scroll.
+- Sidebar, main panel, queue panel, dan bottom player tetap memenuhi layout pada berbagai ukuran window.
+- Track table menjaga alignment kolom, ellipsis judul panjang, dan action column tetap stabil saat hover.
+- Kontrol player tetap clickable saat spectrum aktif; spectrum tidak menangkap pointer event.
+- Search focus ring tampil pada wrapper, bukan outline kotak pada input.
+- Cover image upload dihapus; fitur edit judul lagu tetap dipertahankan.
+
+### Verification
+- `npm run build` pass.
+- `cargo check` pass.
+- Cache library SQLite dan background auto-scan dibatalkan, tidak termasuk perubahan release ini.
+
 ## [0.1.0] - Awal Pengembangan
 
 ### Added

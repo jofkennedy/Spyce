@@ -46,7 +46,7 @@ function navigate(view: string, param?: string) {
   </aside>
 </template>
 <style scoped>
-.sidebar{display:flex;flex-direction:column;gap:16px;padding:16px;background:var(--surface-bg);border-radius:28px;box-shadow:var(--shadow-raised);overflow:hidden;min-height:0;height:100%;box-sizing:border-box}
+ .sidebar{width:240px;display:flex;flex-direction:column;gap:16px;padding:16px;background:var(--surface-bg);border-radius:28px;box-shadow:var(--shadow-raised);overflow:hidden;min-height:0;height:100%;box-sizing:border-box}
 .history{display:flex;gap:8px}
 .icon-btn{border:0;background:var(--surface-bg);box-shadow:var(--shadow-raised-sm);border-radius:50%;width:40px;height:40px;color:var(--text-secondary);cursor:pointer;display:grid;place-items:center}
 .icon-btn:hover:not(:disabled){color:var(--accent);box-shadow:var(--shadow-pressed)}
@@ -68,6 +68,9 @@ function navigate(view: string, param?: string) {
 .playlists-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding-right:4px;margin-bottom:10px}
 .playlist-item{font-size:12px;padding:8px 12px}
 .empty-muted{font-size:11px;color:var(--text-secondary);padding:6px 12px;margin:0}
-.new-pl-btn{width:100%;border:0;background:var(--surface-bg);box-shadow:var(--shadow-raised-sm);border-radius:14px;padding:10px;color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px}
-.new-pl-btn:hover{color:var(--accent);box-shadow:var(--shadow-pressed)}
+ .new-pl-btn{flex:none;width:100%;border:0;background:var(--surface-bg);box-shadow:var(--shadow-raised-sm);border-radius:14px;padding:10px;color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px}
+ .new-pl-btn:hover{color:var(--accent);box-shadow:var(--shadow-pressed)}
+@media(max-width:1100px){.sidebar{width:208px}}
+@media(max-height:820px){.sidebar{gap:10px;padding:14px 12px}.nav-item{min-height:36px;padding:8px 10px}.section-label{margin:8px 10px 4px}}
+@media(max-height:680px){.folder-pill{display:none}}
 </style>

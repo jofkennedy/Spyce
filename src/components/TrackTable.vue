@@ -89,8 +89,9 @@ async function saveMetadata() {
     <div class="table-head">
       <span>#</span>
       <span>Title</span>
-      <span>Album</span>
+      <span class="col-album">Album</span>
       <span class="text-right">Duration</span>
+      <span class="actions-head">Actions</span>
     </div>
     
     <div 
@@ -115,17 +116,14 @@ async function saveMetadata() {
           <strong>{{ track.title }}</strong>
           <small>{{ track.artist }}</small>
         </span>
-        <button class="action-btn meta-action" title="Edit title/cover" @click.stop="openEditor(track)"><Pencil :size="14" /></button>
       </span>
 
-      <span class="album">{{ track.album }}</span>
-
-      <span class="duration">
-        {{ duration(track.duration_secs) }}
-        <div class="row-actions" @click.stop>
-          <button class="action-btn" title="Add to queue" @click="handleAddToQueue(track, $event)"><ListPlus :size="16" /></button>
-          <button class="action-btn" title="Add to playlist" @click="openPopover(track.path, $event)"><Plus :size="16" /></button>
-        </div>
+      <span class="album col-album">{{ track.album }}</span>
+      <span class="duration">{{ duration(track.duration_secs) }}</span>
+      <span class="row-actions" @click.stop>
+        <button class="action-btn" title="Edit title" @click="openEditor(track)"><Pencil :size="14" /></button>
+        <button class="action-btn" title="Add to queue" @click="handleAddToQueue(track, $event)"><ListPlus :size="16" /></button>
+        <button class="action-btn" title="Add to playlist" @click="openPopover(track.path, $event)"><Plus :size="16" /></button>
       </span>
     </div>
 
@@ -170,8 +168,9 @@ async function saveMetadata() {
 </template>
 
 <style scoped>
-.neu-table{background:var(--surface-bg);box-shadow:var(--shadow-inset);border-radius:var(--radius-md);padding:10px 14px;overflow:hidden;position:relative}
-.table-head,.row{display:grid;grid-template-columns:56px minmax(0,2fr) minmax(0,1.2fr) 96px;align-items:center;gap:12px}
+.neu-table{container:main;min-width:0;background:var(--surface-bg);box-shadow:var(--shadow-inset);border-radius:var(--radius-md);padding:10px 14px;overflow:hidden;position:relative}
+.table-head,.row{display:grid;grid-template-columns:48px minmax(0,1fr) minmax(0,.7fr) 64px 112px;align-items:center;gap:16px;min-width:0}
+.table-head>* ,.row>*{min-width:0}
 .table-head{padding:9px 12px;color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
 .text-right{text-align:right}
 .row{width:100%;text-align:left;border:0;background:transparent;color:var(--text-secondary);padding:8px 12px;border-radius:12px;cursor:pointer;transition:var(--transition);position:relative}
@@ -189,12 +188,12 @@ async function saveMetadata() {
 .playing .title strong{color:var(--accent)}
 .title small{font-size:11px}
 .cover{display:grid;place-items:center;width:38px;height:38px;background:var(--surface-deep);box-shadow:var(--shadow-inset);border-radius:9px;color:var(--accent);flex-shrink:0;overflow:hidden}
-.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover img{width:100%;height:100%;object-fit:contain;display:block;border-radius:inherit;box-sizing:border-box;padding:6px}
 .album{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
 .duration{text-align:right;font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:flex-end;gap:8px}
-.row-actions{display:none;align-items:center;gap:4px}
-.row:hover .row-actions{display:flex}
-.action-btn{background:transparent;border:0;color:var(--text-secondary);cursor:pointer;padding:4px;border-radius:6px}
+.row-actions{display:flex;align-items:center;justify-content:flex-end;gap:4px;opacity:0;pointer-events:none;min-width:0}
+.row:hover .row-actions,.row:focus-within .row-actions{opacity:1;pointer-events:auto}
+.action-btn{width:32px;height:32px;display:grid;place-items:center;background:transparent;border:0;color:var(--text-secondary);cursor:pointer;padding:4px;border-radius:6px}
 .action-btn:hover{color:var(--accent);background:var(--surface-bg);box-shadow:var(--shadow-raised-sm)}
 .meta-action{margin-left:auto}
 .toast-notification{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:var(--surface-bg);box-shadow:var(--shadow-raised);padding:8px 16px;border-radius:12px;color:var(--accent);font-size:12px;font-weight:600;z-index:50}
@@ -210,5 +209,6 @@ async function saveMetadata() {
 .editor-actions .neu-button:hover{color:var(--accent);box-shadow:var(--shadow-raised)}
 .editor-actions .neu-button:active{box-shadow:var(--shadow-pressed);transform:translateY(1px)}
 .editor-actions .neu-button.primary{color:var(--accent);font-weight:700}
-.error{color:#ff8c66;font-size:12px;margin:0}
+ .error{color:#ff8c66;font-size:12px;margin:0}
+@container main (max-width:860px){.table-head,.row{grid-template-columns:40px minmax(0,1fr) 64px 112px}.col-album{display:none}}
 </style>

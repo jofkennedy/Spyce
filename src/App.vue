@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import { Plus, ListPlus, Volume2, Volume1, VolumeX, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Music } from "lucide-vue-next";
+import { Plus, ListPlus, Maximize2, Volume2, Volume1, VolumeX, Pause, Play, Repeat, Repeat1, Shuffle, SkipBack, SkipForward, Music } from "lucide-vue-next";
 import Sidebar from "./components/Sidebar.vue";
 import MainView from "./components/MainView.vue";
 import AddToPlaylistPopover from "./components/AddToPlaylistPopover.vue";
 import QueuePanel from "./components/QueuePanel.vue";
+import SpectrumBar from "./components/SpectrumBar.vue";
 import { useNavStore } from "./stores/navigation";
 import { useLibraryStore } from "./stores/library";
 import { usePlayerStore } from "./stores/player";
@@ -98,12 +99,13 @@ onUnmounted(() => {
     <QueuePanel v-if="ui.queueOpen" @close="ui.closeQueue()" />
 
     <footer class="player-bar">
+      <SpectrumBar />
       <div class="track-info">
-        <span class="small-cover"><Music :size="18" /></span>
-        <div class="track-text">
+        <button class="small-cover np-open" :disabled="!player.hasTrack" aria-label="Now playing" @click="nav.go('nowplaying')"><img v-if="player.current && library.coverOf(player.current.path)" :src="library.coverOf(player.current.path)" alt=""/><Music v-else :size="18" /></button>
+        <button class="track-text np-open" :disabled="!player.hasTrack" @click="nav.go('nowplaying')">
           <strong>{{ player.current?.title ?? 'Nothing playing' }}</strong>
           <small>{{ player.current?.artist ?? 'Select a track' }}</small>
-        </div>
+        </button>
         <button
           ref="playlistBtn"
           class="plain-btn"
@@ -189,6 +191,7 @@ onUnmounted(() => {
           :value="player.volume"
           @input="onVolumeInput"
         />
+        <button class="plain" :class="{ active: nav.view === 'nowplaying' }" :aria-pressed="nav.view === 'nowplaying'" aria-label="Now playing" @click="nav.go('nowplaying')"><Maximize2 :size="17"/></button>
       </div>
     </footer>
   </div>
@@ -231,6 +234,7 @@ onUnmounted(() => {
 .main-col {
   grid-column: 2;
   grid-row: 1;
+  min-width: 0;
   min-height: 0;
   height: 100%;
   align-self: stretch;
@@ -243,11 +247,13 @@ onUnmounted(() => {
 }
 
 .player-bar {
+  position: relative;
+  isolation: isolate;
   grid-column: 1 / -1;
   grid-row: 2;
   height: 80px;
   display: grid;
-  grid-template-columns: 1fr 1.3fr 1fr;
+  grid-template-columns: minmax(160px,1fr) minmax(320px,1.6fr) minmax(160px,1fr);
   align-items: center;
   gap: 20px;
   padding: 12px 24px;
@@ -256,6 +262,7 @@ onUnmounted(() => {
   box-shadow: var(--shadow-raised);
   box-sizing: border-box;
 }
+.player-bar > :not(.spectrum) { position: relative; z-index: 1; }
 
 .track-info,
 .controls,
@@ -272,6 +279,12 @@ onUnmounted(() => {
 
 .track-text {
   display: grid;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
   min-width: 0;
 }
 
@@ -290,6 +303,7 @@ onUnmounted(() => {
   text-overflow: ellipsis;
 }
 
+.small-cover img{width:100%;height:100%;object-fit:contain;border-radius:inherit}
 .small-cover {
   display: grid;
   place-items: center;
@@ -391,7 +405,8 @@ onUnmounted(() => {
 }
 
 .volume {
-  width: 90px;
+  width: clamp(72px, 9vw, 120px);
+  flex: none;
   accent-color: var(--accent);
   height: 4px;
   background: var(--surface-deep);
@@ -401,12 +416,6 @@ onUnmounted(() => {
 .player-popover {
   bottom: 100px !important;
   top: auto !important;
-}
-
-@media (max-width: 1100px) {
-  .app-shell.queue-open {
-    grid-template-columns: 240px minmax(0, 1fr);
-  }
 }
 
 @media (max-width: 900px) {
