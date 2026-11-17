@@ -123,6 +123,7 @@ async function chooseFolder() {
   const selected = await open({ directory: true, multiple: false });
   if (typeof selected === "string") {
     library.folder = selected;
+    localStorage.setItem("spyce-library-folder", selected);
     await refresh();
   }
 }
@@ -168,7 +169,11 @@ const scrolled = ref(false);
 function handleScroll() { scrolled.value = (mainScroll.value?.scrollTop ?? 0) > 4; }
 
 defineExpose({ chooseFolder, openNewPlaylistModal });
-onMounted(refresh);
+onMounted(() => {
+  const savedFolder = localStorage.getItem("spyce-library-folder");
+  if (savedFolder) library.folder = savedFolder;
+  refresh();
+});
 </script>
 <template>
   <div class="main-container" :class="{ scrolled }">
@@ -178,6 +183,7 @@ onMounted(refresh);
       :folder-name="folderDisplayName"
       :theme="theme"
       @choose-folder="chooseFolder"
+      @refresh="refresh"
       @toggle-theme="emit('toggleTheme')"
       @import="showImport = true"
     />
