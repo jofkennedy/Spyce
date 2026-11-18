@@ -7,6 +7,7 @@ use std::process::Command;
 use tauri::Manager;
 use walkdir::WalkDir;
 mod lyrics;
+mod discord;
 use lyrics::get_lyrics;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -173,11 +174,12 @@ fn download_youtube(app: tauri::AppHandle, url: String, folder: String) -> Resul
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(discord::start())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::default().build())
-        .invoke_handler(tauri::generate_handler![scan_folder, download_youtube, update_track_metadata, get_lyrics])
+        .invoke_handler(tauri::generate_handler![scan_folder, download_youtube, update_track_metadata, get_lyrics, discord::update_presence, discord::clear_presence])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

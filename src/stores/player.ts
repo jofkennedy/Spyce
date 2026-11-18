@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { Store } from "@tauri-apps/plugin-store";
 import type { Track } from "./library";
 import { ensureGraph, resumeGraph } from "../audio/graph";
@@ -72,14 +72,16 @@ export const usePlayerStore = defineStore("player", () => {
     }
   }
 
-  audio.addEventListener("play", () => { isPlaying.value = true; updateMediaSession(); });
-  audio.addEventListener("pause", () => { isPlaying.value = false; });
+  audio.addEventListener("play", () => { isPlaying.value = true; updateMediaSession(); updateDiscord(); });
+  audio.addEventListener("pause", () => { isPlaying.value = false; updateDiscord(); });
   audio.addEventListener("timeupdate", () => {
     if (!isScrubbing.value) currentTime.value = audio.currentTime;
   });
   audio.addEventListener("loadedmetadata", () => { duration.value = audio.duration; });
   audio.addEventListener("ended", () => { next(true); });
   audio.addEventListener("error", () => { next(true); });
+
+  function updateDiscord() { if (current.value) void invoke("update_presence", { title: current.value.title, artist: current.value.artist, playing: isPlaying.value }).catch(() => {}); }
 
   function updateMediaSession() {
     if ("mediaSession" in navigator && current.value) {
@@ -163,6 +165,7 @@ export const usePlayerStore = defineStore("player", () => {
       isPlaying.value = false;
       currentTime.value = 0;
       audio.currentTime = 0;
+      void invoke("clear_presence").catch(() => {});
     }
   }
 
