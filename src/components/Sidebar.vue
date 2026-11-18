@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight, Music2, Mic2, Disc3, ListMusic, Plus, FolderOpen, ChevronDown } from "lucide-vue-next";
+import { Music2, Mic2, Disc3, ListMusic, Plus } from "lucide-vue-next";
 import { useNavStore } from "../stores/navigation";
 import { usePlaylistStore } from "../stores/playlists";
 
-defineProps<{ hasFolder: boolean; folderPath: string }>();
 const nav = useNavStore();
 const playlistsStore = usePlaylistStore();
-const emit = defineEmits<{ chooseFolder: []; newPlaylist: [] }>();
+const emit = defineEmits<{ newPlaylist: [] }>();
 
 function navigate(view: string, param?: string) {
   nav.navigate(view as never, param);
@@ -14,17 +13,6 @@ function navigate(view: string, param?: string) {
 </script>
 <template>
   <aside class="sidebar neu-panel">
-    <div class="history">
-      <button class="icon-btn" :disabled="!nav.canGoBack" @click="nav.back()" title="Back"><ChevronLeft :size="18"/></button>
-      <button class="icon-btn" :disabled="!nav.canGoForward" @click="nav.forward()" title="Forward"><ChevronRight :size="18"/></button>
-    </div>
-
-    <div class="folder-pill" @click="emit('chooseFolder')" title="Change folder">
-      <FolderOpen :size="15" class="folder-icon"/>
-      <span class="folder-name">{{ folderPath ? folderPath.split(/[/\\]/).pop() : 'Choose folder' }}</span>
-      <ChevronDown :size="13" class="folder-chevron"/>
-    </div>
-
     <nav class="section-nav">
       <div class="section-label">Library</div>
       <button class="nav-item" :class="{ active: nav.view === 'songs' }" @click="navigate('songs')"><Music2 :size="18"/> Songs</button>
@@ -47,17 +35,6 @@ function navigate(view: string, param?: string) {
 </template>
 <style scoped>
  .sidebar{width:240px;display:flex;flex-direction:column;gap:16px;padding:16px;background:var(--surface-bg);border-radius:28px;box-shadow:var(--shadow-raised);overflow:hidden;min-height:0;height:100%;box-sizing:border-box}
-.history{display:flex;gap:8px}
-.icon-btn{border:0;background:var(--surface-bg);box-shadow:var(--shadow-raised-sm);border-radius:50%;width:40px;height:40px;color:var(--text-secondary);cursor:pointer;display:grid;place-items:center}
-.icon-btn:hover:not(:disabled){color:var(--accent);box-shadow:var(--shadow-pressed)}
-.icon-btn:disabled{opacity:.4;cursor:not-allowed}
-
-.folder-pill{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surface-bg);box-shadow:var(--shadow-inset);border-radius:14px;cursor:pointer;color:var(--text-primary);font-size:12px;transition:.15s}
-.folder-pill:hover{color:var(--accent)}
-.folder-icon{color:var(--accent);flex-shrink:0}
-.folder-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
-.folder-chevron{color:var(--text-secondary);flex-shrink:0}
-
 .section-label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--text-secondary);margin:12px 0 6px}
 .section-nav{display:flex;flex-direction:column;gap:4px}
 .nav-item{width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border:0;border-radius:14px;background:transparent;color:var(--text-secondary);cursor:pointer;text-align:left;font-size:13px;font-weight:500}
@@ -70,7 +47,6 @@ function navigate(view: string, param?: string) {
 .empty-muted{font-size:11px;color:var(--text-secondary);padding:6px 12px;margin:0}
  .new-pl-btn{flex:none;width:100%;border:0;background:var(--surface-bg);box-shadow:var(--shadow-raised-sm);border-radius:14px;padding:10px;color:var(--text-primary);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px}
  .new-pl-btn:hover{color:var(--accent);box-shadow:var(--shadow-pressed)}
-@media(max-width:1100px){.sidebar{width:208px}}
 @media(max-height:820px){.sidebar{gap:10px;padding:14px 12px}.nav-item{min-height:36px;padding:8px 10px}.section-label{margin:8px 10px 4px}}
 @media(max-height:680px){.folder-pill{display:none}}
 </style>

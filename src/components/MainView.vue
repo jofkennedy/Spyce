@@ -4,7 +4,7 @@ import { parseLrc, findActive, type LrcLine } from "../lib/lrc";
 import { useLyricsStore } from "../stores/lyrics";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { Play, Pause, Shuffle, ListPlus, Music, FolderPlus, Plus, Trash2, ArrowLeft } from "lucide-vue-next";
+import { Play, Pause, Shuffle, ListPlus, Music, FolderPlus, Plus, Trash2, ArrowLeft, Check } from "lucide-vue-next";
 import TopBar from "./TopBar.vue";
 import TrackTable from "./TrackTable.vue";
 import AddToPlaylistPopover from "./AddToPlaylistPopover.vue";
@@ -13,6 +13,7 @@ import { useNavStore } from "../stores/navigation";
 import { usePlaylistStore } from "../stores/playlists";
 import { usePlayerStore } from "../stores/player";
 import { useUiStore } from "../stores/ui";
+import { sortTracks, type SortKey } from "../lib/sort";
 
 const PAGE_STEP = 3;
 const ANCHOR = 0.22;
@@ -26,6 +27,14 @@ const ui = useUiStore();
 const lyricsLines = ref<LrcLine[]>([]); const lyricsStep = ref(PAGE_STEP); const lyricGroups = ref<number[][]>([]); const npPlaylistAnchor = ref<HTMLElement | null>(null); const showNpPlaylist = ref(false); const lyricsLoading = ref(false); const lyricsError = ref(false); const activeLyrics = ref<number[]>([]); const lyricsScroll = ref<HTMLElement | null>(null); const manualLyricsScroll = ref(false); let lyricsRaf = 0; let ignoreLyricsScroll = false; let lastLyricsTime = -1; let resizeObserver: ResizeObserver | null = null;
 
 const search = ref("");
+const sortMenu = ref(false);
+const sortAnchor = ref<HTMLElement | null>(null);
+const sortOptions: Array<{ key: SortKey; dir: "asc" | "desc"; label: string }> = [{ key: "title", dir: "asc", label: "Judul (A-Z)" }, { key: "title", dir: "desc", label: "Judul (Z-A)" }, { key: "artist", dir: "asc", label: "Artis (A-Z)" }, { key: "artist", dir: "desc", label: "Artis (Z-A)" }, { key: "added", dir: "asc", label: "Terbaru ditambahkan" }, { key: "none", dir: "asc", label: "Tanpa urutan" }];
+const visibleTracks = computed(() => sortTracks(filteredTracks.value, library.sortKey, library.sortDir));
+function setSort(option: { key: SortKey; dir: "asc" | "desc" }) { library.sortKey = option.key; library.sortDir = option.dir; localStorage.setItem("spyce-sort-key", option.key); localStorage.setItem("spyce-sort-dir", option.dir); sortMenu.value = false; }
+function handleSortKey(e: KeyboardEvent) { if (e.key === "Escape") sortMenu.value = false; }
+const sortMenuStyle = computed(() => sortAnchor.value ? { left: `${sortAnchor.value.getBoundingClientRect().left}px`, top: `${sortAnchor.value.getBoundingClientRect().bottom + 8}px` } : {});
+
 const error = ref("");
 const downloading = ref(false);
 const ytUrl = ref("");
@@ -33,8 +42,8 @@ const showImport = ref(false);
 const showNewPlaylist = ref(false);
 const newPlaylistName = ref("");
 
-defineProps<{ nav: string; theme: string }>();
-const emit = defineEmits<{ toggleQueue: []; toggleTheme: [] }>();
+defineProps<{ nav: string }>();
+const emit = defineEmits<{ toggleQueue: [] }>();
 
 const filteredTracks = computed(() =>
   library.tracks.filter(t =>
@@ -181,10 +190,7 @@ onMounted(() => {
       v-model:search="search"
       :has-folder="!!library.folder"
       :folder-name="folderDisplayName"
-      :theme="theme"
       @choose-folder="chooseFolder"
-      @refresh="refresh"
-      @toggle-theme="emit('toggleTheme')"
       @import="showImport = true"
     />
 
@@ -220,11 +226,11 @@ onMounted(() => {
               <h1>All Songs</h1>
               <p class="hero-meta">{{ library.tracks.length }} songs · {{ totalDuration }} min</p>
               <div class="hero-actions">
-                <button class="play-btn" :disabled="!filteredTracks.length" @click="player.contextName === 'Songs' && player.isPlaying ? player.toggle() : handlePlay(filteredTracks[0], filteredTracks, 'Songs')">
+                <button class="play-btn" :disabled="!filteredTracks.length" @click="player.contextName === 'Songs' && player.isPlaying ? player.toggle() : handlePlay(visibleTracks[0], visibleTracks, 'Songs')">
                   <Pause v-if="player.contextName === 'Songs' && player.isPlaying" :size="21" fill="currentColor" />
                   <Play v-else :size="21" fill="currentColor" />
                 </button>
-                <button class="neu-button" :disabled="!filteredTracks.length" @click="player.isShuffle || player.toggleShuffle(); player.setQueue(filteredTracks, filteredTracks[Math.floor(Math.random()*filteredTracks.length)].path, 'Songs')">
+                <button class="neu-button" :disabled="!filteredTracks.length" @click="player.isShuffle || player.toggleShuffle(); player.setQueue(visibleTracks, visibleTracks[Math.floor(Math.random()*visibleTracks.length)].path, 'Songs')">
                   <Shuffle :size="18" /> Shuffle
                 </button>
                 <button class="neu-button" :class="{ active: ui.queueOpen }" :disabled="!filteredTracks.length" :aria-pressed="ui.queueOpen" @click="ui.toggleQueue()">
@@ -233,11 +239,8 @@ onMounted(() => {
               </div>
             </div>
           </section>
-          <div class="section-heading">
-            <h2>All tracks</h2>
-            <span>{{ filteredTracks.length }} songs</span>
-          </div>
-          <TrackTable :tracks="filteredTracks" :playingPath="player.current?.path" @play="handlePlay($event, filteredTracks, 'Songs')" />
+          <div class="section-heading"><div><h2>All tracks</h2><span>{{ visibleTracks.length }} songs</span></div><div class="sort-controls"><button ref="sortAnchor" class="sort-button neu-button" aria-haspopup="menu" :aria-expanded="sortMenu" @click="sortMenu = !sortMenu">Urutkan: {{ sortOptions.find(o => o.key === library.sortKey)?.label }}</button></div></div><TrackTable :tracks="visibleTracks" :playingPath="player.current?.path" @play="handlePlay($event, visibleTracks, 'Songs')" />
+          <Teleport to="body"><div v-if="sortMenu" class="sort-menu neu-card" :style="sortMenuStyle" tabindex="-1" @keydown="handleSortKey"><button v-for="option in sortOptions" :key="`${option.key}-${option.dir}`" role="menuitemradio" :aria-checked="library.sortKey === option.key && library.sortDir === option.dir" @click="setSort(option)">{{ option.label }}<Check v-if="library.sortKey === option.key && library.sortDir === option.dir" :size="16"/></button></div></Teleport>
         </template>
 
         <!-- Artists View -->
@@ -424,7 +427,8 @@ onMounted(() => {
 .card strong{font-size:13px}
 .card small{font-size:11px;color:var(--text-secondary);margin-top:2px}
 
-.section-heading{display:flex;justify-content:space-between;align-items:end;margin:24px 0 14px}
+.section-heading{display:flex;justify-content:space-between;align-items:end;margin:24px 0 14px;min-width:0}.section-heading>div:first-child{min-width:0}.sort-controls{display:flex;align-items:center;gap:8px}.sort-direction{width:40px;height:40px}.sort-menu{position:fixed;z-index:200;display:flex;flex-direction:column;gap:4px;padding:8px;min-width:190px;border-radius:16px;background:var(--surface-bg);box-shadow:var(--shadow-raised)}.sort-menu button{display:flex;justify-content:space-between;gap:12px;border:0;padding:10px 12px;border-radius:10px;background:transparent;color:var(--text-primary);cursor:pointer}.sort-menu button:hover,.sort-menu button[aria-checked=true]{color:var(--accent);box-shadow:var(--shadow-inset)}
+@container main (max-width:860px){.sort-button{font-size:0}.sort-button::before{content:'A-Z';font-size:13px}}
 .section-heading h2{margin:0;font-size:18px}
 .section-heading span,.subtitle{font-size:12px;color:var(--text-secondary)}
 

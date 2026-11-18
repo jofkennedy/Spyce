@@ -17,6 +17,7 @@ pub struct TrackMeta {
     pub album: String,
     pub duration_secs: f64,
     pub cover_art_b64: Option<String>,
+    pub added_at: u64,
 }
 
 const AUDIO_EXTS: &[&str] = &["mp3", "flac", "wav", "ogg", "m4a"];
@@ -26,6 +27,10 @@ fn ext_is_audio(path: &Path) -> bool {
         .and_then(|e| e.to_str())
         .map(|e| AUDIO_EXTS.contains(&e.to_ascii_lowercase().as_str()))
         .unwrap_or(false)
+}
+
+fn file_added_at(path: &Path) -> u64 {
+    std::fs::metadata(path).ok().and_then(|m| m.created().or_else(|_| m.modified()).ok()).and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map(|d| d.as_secs()).unwrap_or(0)
 }
 
 fn stem(path: &Path) -> String {
@@ -47,6 +52,7 @@ fn read_meta(path: &Path) -> TrackMeta {
             album: String::from("Unknown Album"),
             duration_secs: 0.0,
             cover_art_b64: None,
+            added_at: file_added_at(path),
         };
     };
 
@@ -88,6 +94,7 @@ fn read_meta(path: &Path) -> TrackMeta {
         album,
         duration_secs: duration,
         cover_art_b64: cover,
+        added_at: file_added_at(path),
     }
 }
 

@@ -12,9 +12,6 @@ import { usePlayerStore } from "./stores/player";
 import { useUiStore } from "./stores/ui";
 import { usePlaylistStore } from "./stores/playlists";
 
-const theme = ref(localStorage.getItem("spyce-theme") ?? "dark");
-document.documentElement.dataset.theme = theme.value;
-
 const nav = useNavStore();
 const library = useLibraryStore();
 const player = usePlayerStore();
@@ -24,16 +21,6 @@ const playlistsStore = usePlaylistStore();
 const mainViewRef = ref<InstanceType<typeof MainView> | null>(null);
 const showPlaylistPopover = ref(false);
 const playlistBtn = ref<HTMLElement | null>(null);
-
-function toggleTheme() {
-  theme.value = theme.value === "dark" ? "light" : "dark";
-  document.documentElement.dataset.theme = theme.value;
-  localStorage.setItem("spyce-theme", theme.value);
-}
-
-function onSidebarChooseFolder() {
-  mainViewRef.value?.chooseFolder();
-}
 
 function onSidebarNewPlaylist() {
   nav.navigate("playlists");
@@ -80,9 +67,6 @@ onUnmounted(() => {
   <div class="app-shell" :class="{ 'queue-open': ui.queueOpen }">
     <aside class="sidebar-col">
       <Sidebar
-        :has-folder="!!library.folder"
-        :folder-path="library.folder"
-        @choose-folder="onSidebarChooseFolder"
         @new-playlist="onSidebarNewPlaylist"
       />
     </aside>
@@ -91,8 +75,6 @@ onUnmounted(() => {
       <MainView
         ref="mainViewRef"
         :nav="nav.view"
-        :theme="theme"
-        @toggle-theme="toggleTheme"
       />
     </main>
 
